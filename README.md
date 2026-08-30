@@ -322,4 +322,3 @@ MVP is intentionally scoped to one workflow done well — see [Getting started](
 
 ## License
 
-_Add your chosen license here (e.g. MIT, proprietary) before shipping to production._
