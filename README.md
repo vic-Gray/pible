@@ -1,4 +1,5 @@
-# Pible
+<img width="1245" height="1263" alt="ChatGPT Image Aug 28, 2026, 08_41_50 PM" src="https://github.com/user-attachments/assets/caed59b3-7f1d-4894-988e-cfa963d482b2" />
+
 
 **The continuity & intelligence layer for AI-assisted software development.**
 
