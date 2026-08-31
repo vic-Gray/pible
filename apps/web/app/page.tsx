@@ -5,7 +5,13 @@ import Navbar from "@/components/marketing/Navbar";
 import LandingHero from "@/components/marketing/LandingHero";
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
+  let session = null;
+
+  try {
+    session = await getServerSession(authOptions);
+  } catch {
+    session = null;
+  }
 
   if (session) {
     redirect("/projects");

@@ -3,20 +3,39 @@
 import { motion } from "framer-motion";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+  const message = searchParams.get("message");
+
+  const providerConflict = error === "provider_conflict";
+  const errorMessage = providerConflict
+    ? decodeURIComponent(message ?? "")
+    : error === "OAuthAccountNotLinked"
+      ? "This email is already associated with a different sign-in method. Please use the original method you signed up with."
+      : error
+        ? "An error occurred during sign in. Please try again."
+        : null;
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="text-center"
-    >
-              <div className="mb-8">
+    <>
+      {errorMessage && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-left"
+        >
+          <p className="font-medium mb-1">Sign-in blocked</p>
+          <p className="text-red-400/80">{errorMessage}</p>
+        </motion.div>
+      )}
+
+      <div className="mb-8">
         <div className="relative w-24 h-24 mx-auto mb-4">
-
           <div className="absolute inset-0 rounded-2xl bg-white/10 blur-2xl" />
-
           <div className="relative w-24 h-24 rounded-2xl bg-white/[0.06] border border-white/10 backdrop-blur-xl flex items-center justify-center overflow-hidden shadow-[0_1px_0_0_rgba(255,255,255,0.1)_inset]">
             <Image
               src="/logo.png"
@@ -81,6 +100,21 @@ export default function LoginPage() {
       <p className="mt-6 text-white/25 text-xs leading-relaxed">
         By signing in, you agree to our Terms of Service and Privacy Policy.
       </p>
+    </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="text-center"
+    >
+      <Suspense fallback={null}>
+        <LoginForm />
+      </Suspense>
     </motion.div>
   );
 }

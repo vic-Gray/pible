@@ -3,10 +3,18 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 export async function middleware(request: NextRequest) {
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  let token = null;
+
+  if (process.env.NEXTAUTH_SECRET) {
+    try {
+      token = await getToken({
+        req: request,
+        secret: process.env.NEXTAUTH_SECRET,
+      });
+    } catch {
+      token = null;
+    }
+  }
 
   const isDashboardRoute = request.nextUrl.pathname.startsWith("/projects");
   const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
