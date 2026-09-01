@@ -41,6 +41,8 @@ export class AvatarService {
       // Upload the local temp file via its filesystem path as a URL-like path
       const uploadedUrl = await this.cloudinary.uploadImage(tempPath);
 
+
+
       if (!uploadedUrl) {
         throw new BadRequestException('Failed to upload image to Cloudinary');
       }
