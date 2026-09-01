@@ -34,6 +34,10 @@ export class LinkProviderDto {
   @IsString()
   @MaxLength(100)
   displayName?: string;
+
+  @ApiProperty({ example: 'https://avatars.githubusercontent.com/u/12345678?v=4', required: false })
+  @IsString()
+  avatarUrl?: string;
 }
 
 export class ProviderConflictResponse {

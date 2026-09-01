@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { JwtPayload } from './jwt.strategy.js';
 import type { RegisterDto } from './dto/register.dto.js';
@@ -16,7 +17,6 @@ import type { MintApiKeyDto } from './dto/mint-api-key.dto.js';
 import type {
   CheckProviderConflictDto,
   LinkProviderDto,
-  ProviderConflictResponse,
 } from './dto/provider.dto.js';
 
 const BCRYPT_ROUNDS = 12;
@@ -53,6 +53,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   // ─── Registration ──────────────────────────────────────────────────────────
@@ -293,10 +294,15 @@ export class AuthService {
     }
 
     // Brand new user — create account with provider link
+    const avatarUrl = dto.avatarUrl
+      ? await this.cloudinaryService.uploadImage(dto.avatarUrl)
+      : null;
+
     const user = await this.prisma.user.create({
       data: {
         email,
         displayName: dto.displayName,
+        avatarUrl: avatarUrl ?? undefined,
         passwordHash: null, // OAuth-only user
         providers: {
           create: {
@@ -362,6 +368,27 @@ export class AuthService {
     });
 
     return { success: true };
+  }
+
+  /**
+   * Upload a new avatar image to Cloudinary and update the user's avatarUrl.
+   */
+  async updateAvatar(
+    userId: string,
+    imageUrl: string,
+  ): Promise<{ avatarUrl: string }> {
+    const cloudinaryUrl = await this.cloudinaryService.uploadImage(imageUrl);
+
+    if (!cloudinaryUrl) {
+      throw new Error('Failed to upload avatar to Cloudinary');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl: cloudinaryUrl },
+    });
+
+    return { avatarUrl: cloudinaryUrl };
   }
 
   // ─── Refresh ───────────────────────────────────────────────────────────────

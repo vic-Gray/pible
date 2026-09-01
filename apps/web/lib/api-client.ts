@@ -113,6 +113,51 @@ class ApiClient {
     });
   }
 
+  postFormData<T>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> {
+    const accessToken = this.getAccessToken();
+
+    const headers: HeadersInit = {
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    };
+
+    return fetch(`${this.baseUrl}${endpoint}`, {
+      method: "POST",
+      headers,
+      body: formData,
+      credentials: "include",
+    }).then(async (response) => {
+      if (response.status === 401 && accessToken) {
+        const newToken = await this.refreshAccessToken();
+        if (newToken) {
+          return fetch(`${this.baseUrl}${endpoint}`, {
+            method: "POST",
+            headers: {
+              ...(newToken ? { Authorization: `Bearer ${newToken}` } : {}),
+            },
+            body: formData,
+            credentials: "include",
+          });
+        }
+      }
+
+      if (!response.ok) {
+        let error: ApiError;
+        try {
+          error = await response.json();
+        } catch {
+          error = { message: response.statusText || "Request failed", statusCode: response.status };
+        }
+        throw new Error(error.message || "An unexpected error occurred");
+      }
+
+      if (response.status === 204) {
+        return { data: undefined as T };
+      }
+
+      return response.json();
+    });
+  }
+
   put<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: "PUT",
@@ -126,3 +171,15 @@ class ApiClient {
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);
+
+export const avatarApi = {
+  getCurrent: () => apiClient.get<{ avatarUrl: string }>('/avatars/me'),
+  uploadFile: (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return apiClient.postFormData<{ avatarUrl: string }>('/avatars/upload', formData);
+  },
+  uploadFromUrl: (imageUrl: string) => apiClient.post<{ avatarUrl: string }>('/avatars/from-url', { imageUrl }),
+  delete: () => apiClient.delete<{ message: string }>('/avatars/me'),
+  getHistory: () => apiClient.get<Array<{ id: string; avatarUrl: string; provider: string; createdAt: string }>>('/avatars/history'),
+};

@@ -1,19 +1,8 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards, } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
-  ApiSecurity,
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service.js';
@@ -22,6 +11,7 @@ import { RegisterDto } from './dto/register.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
 import { MintApiKeyDto } from './dto/mint-api-key.dto.js';
+import { UpdateAvatarDto } from './dto/update-avatar.dto.js';
 import {
   CheckProviderConflictDto,
   LinkProviderDto,
@@ -160,6 +150,24 @@ export class AuthController {
     @CurrentActor() actor: RequestContext,
   ) {
     return this.authService.unlinkProvider(actor.actorId, providerId);
+  }
+
+  /**
+   * PATCH /api/v1/auth/me/avatar
+   * Upload a new avatar image to Cloudinary and update the current user's avatar.
+   */
+  @Patch('me/avatar')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Update current user avatar' })
+  @ApiResponse({ status: 200, description: 'Returns updated avatar URL' })
+  @ApiResponse({ status: 401, description: 'Missing or invalid token' })
+  updateAvatar(
+    @Body() dto: UpdateAvatarDto,
+    @CurrentActor() actor: RequestContext,
+  ) {
+    return this.authService.updateAvatar(actor.actorId, dto.imageUrl);
   }
 
   /**

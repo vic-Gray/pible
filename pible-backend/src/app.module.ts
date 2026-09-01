@@ -4,15 +4,14 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { AvatarModule } from './avatar/avatar.module.js';
 
 @Module({
   imports: [
-    // Makes process.env available via ConfigService across the entire app
     ConfigModule.forRoot({ isGlobal: true }),
-    // Global PrismaService — no need to re-import in feature modules
     PrismaModule,
-    // Auth: JWT (dashboard) + API Key (agents/CLI)
     AuthModule,
+    AvatarModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -29,13 +29,14 @@ function getAllowedOrigins(): string[] {
   const productionUrl = process.env.FRONTEND_URL_PRODUCTION?.trim();
   const testingUrl =
     process.env.FRONTEND_URL_TESTING?.trim() || 'http://localhost:3000';
+  const swaggerUrl = process.env.FRONTEND_URL_SWAGGER?.trim();
 
   const extraOrigins =
     process.env.CORS_ORIGINS?.split(',')
       .map((origin) => origin.trim())
       .filter(Boolean) ?? [];
 
-  const origins = [productionUrl, testingUrl, ...extraOrigins].filter(
+  const origins = [productionUrl, testingUrl, swaggerUrl, ...extraOrigins].filter(
     (origin): origin is string => Boolean(origin),
   );
 
@@ -210,20 +211,17 @@ async function bootstrap(): Promise<void> {
    */
   await app.listen(port, '0.0.0.0');
 
-  /**
-   * -------------------------------------------------------
-   * Startup Logs
-   * -------------------------------------------------------
-   */
+  // Render (and most PaaS hosts) inject the real public URL as an env var.
+  // Fall back to localhost only when running locally, where that's actually correct.
+  const publicUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
+
   logger.log('🚀 Application started successfully');
   logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.log(`Port: ${port}`);
-  logger.log(`API: http://localhost:${port}/${apiPrefix}`);
+  logger.log(`API: ${publicUrl}/${apiPrefix}`);
 
   if (enableSwagger) {
-    logger.log(
-      `📚 Swagger: http://localhost:${port}/${apiPrefix}/v1/docs`,
-    );
+    logger.log(`📚 Swagger: ${publicUrl}/${apiPrefix}/v1/docs`);
   }
 }
 

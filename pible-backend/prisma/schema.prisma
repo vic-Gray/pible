@@ -13,11 +13,13 @@ model User {
   email        String    @unique
   passwordHash String?   @map("password_hash")
   displayName  String?   @map("display_name")
+  avatarUrl    String?   @map("avatar_url")
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
   apiKeys      ApiKey[]
   projects     Project[]
   providers    UserProvider[]
+  avatarHistory AvatarHistory[]
 
   @@map("users")
 }
@@ -34,6 +36,19 @@ model UserProvider {
   @@unique([provider, providerAccountId])
   @@index([userId])
   @@map("user_providers")
+}
+
+model AvatarHistory {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  avatarUrl   String    @map("avatar_url")
+  provider    String    @default("upload")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("avatar_history")
 }
 
 model Project {
